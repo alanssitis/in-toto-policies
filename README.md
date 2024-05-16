@@ -45,7 +45,7 @@ The gap left between newer attestations and older layouts:
 
 While this project hopefully doesn't become the in-toto layout replacement as it was built by
 one guy with no experience running in-toto at scale, it could be a place to explore ideas and
-inspire the future of layouts as what attestations was to links.
+inspire something that is to layouts as what attestations was to links.
 
 ## Solution
 
