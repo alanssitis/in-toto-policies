@@ -1,0 +1,99 @@
+functionaries:
+  alice:
+    keyPath: ./alice.pub
+    keyType: rsa
+    scheme: rsa
+
+attestations:
+
+  - name: untar
+    predicateType: https://in-toto.io/attestation/link/v0.3
+    policies:
+      - type: https://in-toto.io/policy/predicate-attribute/v0.1
+        definition:
+          expressions:
+            - this.predicate.command == ['tar', 'xvf', 'project.tar.gz'] 
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.subject
+          rules:
+            - "CREATE main.c"
+            - "CREATE external.c"
+            - "CREATE external.h"
+            - "CREATE Makefile"
+            - "CREATE it.Makefile"
+            - "DISALLOW *"
+    allowedFunctionaries:
+      - alice
+
+  - name: build_external
+    predicateType: https://in-toto.io/attestation/link/v0.3
+    policies:
+      - type: https://in-toto.io/policy/predicate-attribute/v0.1
+        definition:
+          expressions:
+            - this.predicate.command == ['cc', '-c', '-o', 'external.o', 'external.c'] 
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.predicate.materials
+          rules:
+            - "MATCH external.c WITH untar.subject"
+            - "MATCH external.h WITH untar.subject"
+            - "ALLOW Makefile"
+            - "DISALLOW *"
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.subject
+          rules:
+            - "CREATE external.o"
+            - "DISALLOW *"
+    allowedFunctionaries:
+      - alice
+
+  - name: build_main
+    predicateType: https://in-toto.io/attestation/link/v0.3
+    policies:
+      - type: https://in-toto.io/policy/predicate-attribute/v0.1
+        definition:
+          expressions:
+            - this.predicate.command == ['cc', '-c', '-o', 'main.o', 'main.c'] 
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.predicate.materials
+          rules:
+            - "MATCH main.c WITH untar.subject"
+            - "MATCH external.h WITH untar.subject"
+            - "ALLOW Makefile"
+            - "DISALLOW *"
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.subject
+          rules:
+            - "CREATE main.o"
+            - "DISALLOW *"
+    allowedFunctionaries:
+      - alice
+
+  - name: build_testy
+    predicateType: https://in-toto.io/attestation/link/v0.3
+    policies:
+      - type: https://in-toto.io/policy/predicate-attribute/v0.1
+        definition:
+          expressions:
+            - this.predicate.command == ['cc', '-o', 'testy', 'main.o', 'external.o']
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.predicate.materials
+          rules:
+            - "MATCH main.o WITH build_main.subject"
+            - "MATCH external.o WITH build_external"
+            - "ALLOW Makefile"
+            - "DISALLOW *"
+      - type: https://in-toto.io/policy/artifact-rules/v0.1
+        definition:
+          field: this.subject
+          rules:
+            - "CREATE testy"
+            - "DISALLOW *"
+    allowedFunctionaries:
+      - alice
