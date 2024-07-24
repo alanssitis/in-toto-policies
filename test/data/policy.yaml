@@ -1,8 +1,7 @@
 functionaries:
-  alice:
-    keyPath: ./alice.pub
-    keyType: rsa
-    scheme: rsa
+  - name: alice
+    publicKeyPath: ./alice.pub
+    scheme: rsa-pss
 
 attestations:
 
