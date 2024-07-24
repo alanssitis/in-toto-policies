@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
-	"log"
+	"errors"
 	"os"
 	"path"
 
@@ -39,7 +39,7 @@ func verify(cmd *cobra.Command, args []string) error {
 
 	raw, err := os.ReadFile(args[0])
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		return err
 	}
 
 	pd := models.PolicyDocument{}
@@ -49,15 +49,15 @@ func verify(cmd *cobra.Command, args []string) error {
 	case policy_ext == ".yml" || policy_ext == ".yaml":
 		err = yaml.Unmarshal(raw, &pd)
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			return err
 		}
 	case policy_ext == ".json":
 		err = json.Unmarshal(raw, &pd)
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			return err
 		}
 	default:
-		log.Fatalf("error: unsupported file extension for policy (%s)", policy_ext)
+		return errors.New("unsupported file extension for test policy file")
 	}
 
 	return policies.Verify(pd)

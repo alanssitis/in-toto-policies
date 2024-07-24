@@ -9,12 +9,21 @@ import (
 )
 
 func parseFunctionaries(functionaries []*models.Functionary) (map[string]dsse.Verifier, error) {
+	sugar.Infof("parsing functionaries")
 	vs := make(map[string]dsse.Verifier, len(functionaries))
 	for _, f := range functionaries {
 		v, err := loadPublicKeyVerifier(f.PublicKeyPath, f.Scheme)
 		if err != nil {
 			return nil, err
 		}
+		keyId, err := v.KeyID()
+		if err != nil {
+			return nil, err
+		}
+		sugar.Infow("added functionary",
+			"name", f.Name,
+			"keyID", keyId,
+		)
 		vs[f.Name] = v
 	}
 	return vs, nil
