@@ -79,103 +79,11 @@ that introduces something that is to layouts as what attestatoins was to links.
 
 ## Solution
 
-This repository contains all protobuffs and code used to implement the
-experiment. Below is the payload of the demo layout under `in-toto-golang`'s
-tests, and the resulting "modern" policy which uses link attestations and
-showcases some new concepts which would be introduced later in the document.
-
-Here is the payload of [`demo.layout`](https://github.com/in-toto/in-toto-golang/blob/master/test/data/demo.layout)
-in its original JSON. Below is the layout in a simplified YAML format that has
-the description of the intended policy with key and certificate definitions
-ommitted for clarity.
-
-```yaml
-steps:
-  - name: write-code
-    expected_products:
-      - ALLOW foo.py
-    pubkeys:
-      - write-code-key
-    cert_constraints:
-      - roots: test-root
-  - name: package
-    expected_command: tar zcvf foo.tar.gz foo.py
-    expected_materials:
-      - MATCH foo.py WITH PRODUCTS FROM write-code
-      - DISALLOW *
-    expected_products:
-      - ALLOW foo.tar.gz
-      - ALLOW foo.py
-    pubkeys:
-      - package-key
-inspect:
-  - name: untar
-    run: tar xfz foo.tar.gz
-    expected_materials:
-      - MATCH foo.tar.gz WITH PRODUCTS FROM package
-      - DISALLOW foo.tar.gz
-    expected_products:
-      - MATCH foo.py WITH PRODUCTS FROM write-code
-      - DISALLOW foo.py
-keys:
-  - name: write-code-key
-    etc: ...
-  - name: package-key
-    etc: ...
-rootcas:
-  - name: test-root
-    etc: ...
-intermediatecas:
-  - name: test-intermediate
-    etc: ...
-```
-
-Now, here is the same layout implemented in the new policy system.
+This repository contains all code used to implement the experiment. Here is the
+[layout](https://github.com/alanssitis/new-attestation-policy-demo/blob/main/layout.yaml)
+from the demo shown at Kubecon EU 2024 and [here](test/data/policy.yaml)
+is its "modern" look.
 
 > [!NOTE]
-> `inspect` is still a WIP.
-
-```yaml
-attestations:
-  - name: write-code
-    predicate_type: https://in-toto.io/attestation/link/v0.3
-    policies:
-      - type: artifact_rules
-        field: this.subject
-        rules:
-          - ALLOW foo.py
-    pubkeys:
-      - write-code-key
-    cert_constraints:
-      - roots: test-root
-  - name: package
-    predicate_type: https://in-toto.io/attestation/link/v0.3
-    policies:
-      - type: attribute_rules
-        rules:
-          - this.predicate.command.join(' ') == 'tar zcvf foo.tar.gz foo.py'
-      - type: artifact_rules
-        field: this.predicate.materials
-        rules:
-          - MATCH foo.py WITH write-code.subject
-          - DISALLOW *
-      - type: artifact_rules
-        field: this.subject
-        rules:
-          - ALLOW foo.tar.gz
-          - ALLOW foo.py
-    pubkeys:
-      - package-key
-# inspect -- This is WIP
-keys:
-  - name: write-code-key
-    etc: ...
-  - name: package-key
-    etc: ...
-rootcas:
-  - name: test-root
-    etc: ...
-intermediatecas:
-  - name: test-intermediate
-    etc: ...
-```
+> `inspect` is still a WIP. But its functionality can be partially implemented
+> via a novel policy type.
