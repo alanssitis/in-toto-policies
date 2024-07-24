@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"path"
 
 	"github.com/alanssitis/in-toto-policies/pkg/policies"
+	"github.com/alanssitis/in-toto-policies/pkg/policies/models"
 	"gopkg.in/yaml.v3"
 
 	"github.com/spf13/cobra"
@@ -42,7 +42,7 @@ func verify(cmd *cobra.Command, args []string) error {
 		log.Fatalf("error: %v", err)
 	}
 
-	pd := policies.PolicyDocument{}
+	pd := models.PolicyDocument{}
 	policy_ext := path.Ext(args[0])
 
 	switch {
@@ -60,5 +60,5 @@ func verify(cmd *cobra.Command, args []string) error {
 		log.Fatalf("error: unsupported file extension for policy (%s)", policy_ext)
 	}
 
-	return nil
+	return policies.Verify(pd)
 }
