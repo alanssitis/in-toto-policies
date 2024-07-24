@@ -1,8 +1,8 @@
 package models
 
 type PolicyDocument struct {
-	Functionaries []*Functionary `yaml:"functionaries" json:"functionaries"`
-	Attestations  []*Attestation `yaml:"attestations" json:"attestations"`
+	Functionaries    []*Functionary     `yaml:"functionaries" json:"functionaries"`
+	AttestationRules []*AttestationRule `yaml:"attestationRules" json:"attestationRules"`
 }
 
 type Functionary struct {
@@ -11,7 +11,7 @@ type Functionary struct {
 	Scheme        string `yaml:"scheme" json:"scheme"`
 }
 
-type Attestation struct {
+type AttestationRule struct {
 	Name                 string    `yaml:"name" json:"name"`
 	PredicateType        string    `yaml:"predicateType" json:"predicateType"`
 	Policies             []*Policy `yaml:"policies" json:"policies"`

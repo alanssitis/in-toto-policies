@@ -3,7 +3,7 @@ functionaries:
     publicKeyPath: ./alice.pub
     scheme: rsa-pss
 
-attestations:
+attestationRules:
 
   - name: untar
     predicateType: https://in-toto.io/attestation/link/v0.3

@@ -24,17 +24,17 @@ func Verify(pd models.PolicyDocument) error {
 	if err != nil {
 		return err
 	}
-	dirEntries, err := os.ReadDir(dir)
+	dir_entries, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 
-	return verifyAttestations(pd.Attestations, dirEntries, vm)
+	return verifyAttestations(pd.AttestationRules, dir_entries, vm)
 }
 
-func verifyAttestations(attestations []*models.Attestation, dirEntries []fs.DirEntry, vm map[string]dsse.Verifier) error {
-	for _, a := range attestations {
-		err := verifyAttestation(a, dirEntries, vm)
+func verifyAttestations(attestation_rules []*models.AttestationRule, dir_entries []fs.DirEntry, vm map[string]dsse.Verifier) error {
+	for _, a := range attestation_rules {
+		err := verifyAttestation(a, dir_entries, vm)
 		if err != nil {
 			return err
 		}
@@ -42,8 +42,8 @@ func verifyAttestations(attestations []*models.Attestation, dirEntries []fs.DirE
 	return nil
 }
 
-func verifyAttestation(a *models.Attestation, dirEntries []fs.DirEntry, vm map[string]dsse.Verifier) error {
-	envelope, err := getEnvelope(dirEntries, a.Name)
+func verifyAttestation(ar *models.AttestationRule, dir_entries []fs.DirEntry, vm map[string]dsse.Verifier) error {
+	envelope, err := getEnvelope(dir_entries, ar.Name)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func verifyAttestation(a *models.Attestation, dirEntries []fs.DirEntry, vm map[s
 		return errors.New("matched with an envelope that is not of type in-toto")
 	}
 
-	ev, err := buildEnvelopeVerifier(a.AllowedFunctionaries, vm)
+	ev, err := buildEnvelopeVerifier(ar.AllowedFunctionaries, vm)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func verifyAttestation(a *models.Attestation, dirEntries []fs.DirEntry, vm map[s
 	if err != nil {
 		return err
 	}
-	if a.PredicateType != statement.PredicateType {
+	if ar.PredicateType != statement.PredicateType {
 		return errors.New("predicate is not of the expected type")
 	}
 
@@ -74,8 +74,8 @@ func verifyAttestation(a *models.Attestation, dirEntries []fs.DirEntry, vm map[s
 	return nil
 }
 
-func getEnvelope(dirEntries []fs.DirEntry, name string) (*dsse.Envelope, error) {
-	d, err := findMatchingFile(dirEntries, name)
+func getEnvelope(dir_entries []fs.DirEntry, name string) (*dsse.Envelope, error) {
+	d, err := findMatchingFile(dir_entries, name)
 	if err != nil {
 		return nil, err
 	}
@@ -93,18 +93,18 @@ func getEnvelope(dirEntries []fs.DirEntry, name string) (*dsse.Envelope, error) 
 	return &envelope, nil
 }
 
-func findMatchingFile(dirEntries []fs.DirEntry, name string) (fs.DirEntry, error) {
-	for _, d := range dirEntries {
-		if strings.HasPrefix(d.Name(), name) && !d.IsDir() {
-			return d, nil
+func findMatchingFile(dir_entries []fs.DirEntry, name string) (fs.DirEntry, error) {
+	for _, de := range dir_entries {
+		if strings.HasPrefix(de.Name(), name) && !de.IsDir() {
+			return de, nil
 		}
 	}
 	return nil, errors.New("could not find matching attestation file from current working directory")
 }
 
-func buildEnvelopeVerifier(allowedFunctionaries []string, vm map[string]dsse.Verifier) (*dsse.EnvelopeVerifier, error) {
-	vs := make([]dsse.Verifier, len(allowedFunctionaries))
-	for i, f := range allowedFunctionaries {
+func buildEnvelopeVerifier(allowed_functionaries []string, vm map[string]dsse.Verifier) (*dsse.EnvelopeVerifier, error) {
+	vs := make([]dsse.Verifier, len(allowed_functionaries))
+	for i, f := range allowed_functionaries {
 		vs[i] = vm[f]
 	}
 	return dsse.NewEnvelopeVerifier(vs...)

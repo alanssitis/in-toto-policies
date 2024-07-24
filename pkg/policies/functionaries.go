@@ -20,22 +20,22 @@ func parseFunctionaries(functionaries []*models.Functionary) (map[string]dsse.Ve
 	return vs, nil
 }
 
-func loadPublicKeyVerifier(publicKeyPath string, scheme string) (dsse.Verifier, error) {
+func loadPublicKeyVerifier(public_key_path string, scheme string) (dsse.Verifier, error) {
 	switch scheme {
 	case "rsa-pss":
-		rsa, err := signerverifier.LoadRSAPSSKeyFromFile(publicKeyPath)
+		rsa, err := signerverifier.LoadRSAPSSKeyFromFile(public_key_path)
 		if err != nil {
 			return nil, err
 		}
 		return signerverifier.NewRSAPSSSignerVerifierFromSSLibKey(rsa)
 	case "ecdsa":
-		ecdsa, err := signerverifier.LoadECDSAKeyFromFile(publicKeyPath)
+		ecdsa, err := signerverifier.LoadECDSAKeyFromFile(public_key_path)
 		if err != nil {
 			return nil, err
 		}
 		return signerverifier.NewECDSASignerVerifierFromSSLibKey(ecdsa)
 	case "ed25519":
-		ed25519, err := signerverifier.LoadED25519KeyFromFile(publicKeyPath)
+		ed25519, err := signerverifier.LoadED25519KeyFromFile(public_key_path)
 		if err != nil {
 			return nil, err
 		}
