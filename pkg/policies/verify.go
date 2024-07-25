@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/alanssitis/in-toto-policies/pkg/policies/models"
+	"github.com/alanssitis/in-toto-policies/pkg/policies/verifiers"
 	ita "github.com/in-toto/attestation/go/v1"
 	"github.com/secure-systems-lab/go-securesystemslib/dsse"
 	"go.uber.org/zap"
@@ -115,7 +116,16 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 		return errors.New("predicate is not of the expected type")
 	}
 
-	// TODO: predicate matching work
+	sugar.Infow("start verifying attestation policies",
+		"name", ar.Name,
+	)
+	for _, p := range ar.Policies {
+		err = verifyPolicy(statement, p)
+		if err != nil {
+			sugar.Errorf("failed to verify attestation policies")
+			return err
+		}
+	}
 
 	sugar.Infow("successfully verified attestation rule",
 		"name", ar.Name,
@@ -123,6 +133,19 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 	)
 
 	return nil
+}
+
+func verifyPolicy(statement *ita.Statement, policy *models.Policy) error {
+	sugar.Infow("start verifying policy",
+		"policyType", policy.Type,
+	)
+	err := verifiers.VerifyPolicy(statement, policy)
+	if err != nil {
+		sugar.Errorf("policy verification failed")
+		return err
+	}
+	sugar.Infow("successfully verified policy")
+	return err
 }
 
 func getEnvelope(f string) (*dsse.Envelope, error) {
