@@ -120,7 +120,7 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 		"name", ar.Name,
 	)
 	for _, p := range ar.Policies {
-		err = verifyPolicy(statement, p)
+		err = verifyPolicy(statement, p, ar.Name)
 		if err != nil {
 			sugar.Errorf("failed to verify attestation policies")
 			return err
@@ -135,11 +135,11 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 	return nil
 }
 
-func verifyPolicy(statement *ita.Statement, policy *models.Policy) error {
+func verifyPolicy(statement *ita.Statement, policy *models.Policy, rule_name string) error {
 	sugar.Infow("start verifying policy",
 		"policyType", policy.Type,
 	)
-	err := verifiers.VerifyPolicy(statement, policy)
+	err := verifiers.VerifyPolicy(statement, policy, rule_name)
 	if err != nil {
 		sugar.Errorf("policy verification failed")
 		return err

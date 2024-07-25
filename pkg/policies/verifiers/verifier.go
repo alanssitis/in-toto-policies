@@ -8,7 +8,7 @@ import (
 	ita "github.com/in-toto/attestation/go/v1"
 )
 
-func VerifyPolicy(statement *ita.Statement, policy *models.Policy) error {
+func VerifyPolicy(statement *ita.Statement, policy *models.Policy, rule_name string) error {
 	switch policy.Type {
 	case "https://in-toto.io/policy/artifact-rules/v0.1":
 		var ar models.ArtifactRules
@@ -20,7 +20,7 @@ func VerifyPolicy(statement *ita.Statement, policy *models.Policy) error {
 		if err != nil {
 			return err
 		}
-		return verifyArtifactRules(statement, &ar)
+		return verifyArtifactRules(statement, &ar, rule_name)
 	case "https://in-toto.io/policy/predicate-attribute/v0.1":
 		var pa models.PredicateAttribute
 		m, err := json.Marshal(policy.Definition)
@@ -31,7 +31,7 @@ func VerifyPolicy(statement *ita.Statement, policy *models.Policy) error {
 		if err != nil {
 			return err
 		}
-		return verifyPredicateAttribute(statement, &pa)
+		return verifyPredicateAttribute(statement, &pa, rule_name)
 	default:
 		return errors.New("unsupported policy type")
 	}

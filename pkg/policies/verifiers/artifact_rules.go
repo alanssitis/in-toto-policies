@@ -5,6 +5,6 @@ import (
 	ita "github.com/in-toto/attestation/go/v1"
 )
 
-func verifyArtifactRules(statement *ita.Statement, ar *models.ArtifactRules) error {
+func verifyArtifactRules(statement *ita.Statement, ar *models.ArtifactRules, rule_name string) error {
 	return nil
 }
