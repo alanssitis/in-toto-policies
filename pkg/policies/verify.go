@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/alanssitis/in-toto-policies/pkg/policies/models"
@@ -18,7 +19,7 @@ import (
 
 var sugar *zap.SugaredLogger
 
-func Verify(pd models.PolicyDocument) error {
+func Verify(pd models.PolicyDocument, fdir string, adir string) error {
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	logger, err := config.Build()
@@ -33,7 +34,11 @@ func Verify(pd models.PolicyDocument) error {
 
 	sugar.Infof("start policy verification")
 
-	vm, err := parseFunctionaries(pd.Functionaries)
+	fdir, err = validateDir(fdir)
+	if err != nil {
+		return err
+	}
+	vm, err := parseFunctionaries(pd.Functionaries, fdir)
 	if err != nil {
 		sugar.Errorw("failed to parse functionaries",
 			"error", err,
@@ -41,14 +46,11 @@ func Verify(pd models.PolicyDocument) error {
 		return err
 	}
 
-	dir, err := os.Getwd()
+	adir, err = validateDir(adir)
 	if err != nil {
-		sugar.Errorw("failed to get current directory",
-			"error", err,
-		)
 		return err
 	}
-	dir_entries, err := os.ReadDir(dir)
+	dir_entries, err := os.ReadDir(adir)
 	if err != nil {
 		sugar.Errorw("failed to parse functionaries",
 			"error", err,
@@ -56,14 +58,15 @@ func Verify(pd models.PolicyDocument) error {
 		return err
 	}
 
-	return verifyAttestationRules(pd.AttestationRules, dir_entries, vm)
+	attestations := mapAttestations(adir, dir_entries)
+	return verifyAttestationRules(pd.AttestationRules, attestations, vm)
 }
 
-func verifyAttestationRules(attestation_rules []*models.AttestationRule, dir_entries []fs.DirEntry, vm map[string]dsse.Verifier) error {
+func verifyAttestationRules(attestation_rules []*models.AttestationRule, attestations map[string]string, vm map[string]dsse.Verifier) error {
 	sugar.Infof("start verifying attestation rules")
 
 	for _, a := range attestation_rules {
-		err := verifyAttestationRule(a, dir_entries, vm)
+		err := verifyAttestationRule(a, attestations, vm)
 		if err != nil {
 			sugar.Errorw("failed to verify attestation rule",
 				"error", err,
@@ -74,17 +77,13 @@ func verifyAttestationRules(attestation_rules []*models.AttestationRule, dir_ent
 	return nil
 }
 
-func verifyAttestationRule(ar *models.AttestationRule, dir_entries []fs.DirEntry, vm map[string]dsse.Verifier) error {
+func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]string, vm map[string]dsse.Verifier) error {
 	sugar.Infow("start verifying attestation rule",
 		"name", ar.Name,
 	)
 
-	d, err := findMatchingFile(dir_entries, ar.Name)
-	if err != nil {
-		sugar.Errorf("failed to find a corresponding attestation file")
-		return err
-	}
-	envelope, err := getEnvelope(d)
+	file := attestations[ar.Name]
+	envelope, err := getEnvelope(file)
 	if err != nil {
 		sugar.Errorf("failed to get and parse envelope from attestation file")
 		return err
@@ -120,14 +119,14 @@ func verifyAttestationRule(ar *models.AttestationRule, dir_entries []fs.DirEntry
 
 	sugar.Infow("successfully verified attestation rule",
 		"name", ar.Name,
-		"attestationFileName", d.Name(),
+		"attestationFileName", file,
 	)
 
 	return nil
 }
 
-func getEnvelope(d fs.DirEntry) (*dsse.Envelope, error) {
-	data, err := os.ReadFile(d.Name())
+func getEnvelope(f string) (*dsse.Envelope, error) {
+	data, err := os.ReadFile(f)
 	if err != nil {
 		return nil, err
 	}
@@ -141,13 +140,13 @@ func getEnvelope(d fs.DirEntry) (*dsse.Envelope, error) {
 	return &envelope, nil
 }
 
-func findMatchingFile(dir_entries []fs.DirEntry, name string) (fs.DirEntry, error) {
+func findMatchingFile(dir_entries []fs.DirEntry, name string, dir string) (string, error) {
 	for _, de := range dir_entries {
 		if strings.HasPrefix(de.Name(), name) && !de.IsDir() {
-			return de, nil
+			return filepath.Join(dir, de.Name()), nil
 		}
 	}
-	return nil, errors.New("could not find matching attestation file")
+	return "", errors.New("could not find matching attestation file")
 }
 
 func buildEnvelopeVerifier(allowed_functionaries []string, vm map[string]dsse.Verifier) (*dsse.EnvelopeVerifier, error) {
@@ -169,4 +168,39 @@ func getStatement(envelope *dsse.Envelope) (*ita.Statement, error) {
 		return nil, err
 	}
 	return &statement, nil
+}
+
+func validateDir(dir string) (string, error) {
+	if dir != "" {
+		fi, err := os.Stat(dir)
+		if err != nil {
+			return dir, err
+		}
+		if !fi.IsDir() {
+			return dir, errors.New("path passed is not a directory")
+		}
+		return dir, nil
+	}
+	dir, err := os.Getwd()
+	if err != nil {
+		sugar.Errorw("failed to get current directory",
+			"error", err,
+		)
+		return dir, err
+	}
+	return dir, nil
+}
+
+func mapAttestations(dir string, dir_entries []fs.DirEntry) map[string]string {
+	ma := make(map[string]string)
+
+	for _, de := range dir_entries {
+		name := de.Name()
+		if ext := filepath.Ext(name); ext != ".json" && ext != ".link" {
+			continue
+		}
+		ma[name[:strings.IndexByte(name, '.')]] = filepath.Join(dir, name)
+	}
+
+	return ma
 }

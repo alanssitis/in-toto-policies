@@ -13,6 +13,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	fdir string
+	adir string
+)
+
 // verifyCmd represents the verify command
 var verifyCmd = &cobra.Command{
 	Use:   "verify POLICY_FILE",
@@ -32,11 +37,11 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// verifyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	verifyCmd.Flags().StringVarP(&fdir, "functionary-directory", "f", "", "Relative directory to get functionary information")
+	verifyCmd.Flags().StringVarP(&adir, "attestation-directory", "a", "", "Directory to search all attestations")
 }
 
 func verify(cmd *cobra.Command, args []string) error {
-
 	raw, err := os.ReadFile(args[0])
 	if err != nil {
 		return err
@@ -60,5 +65,5 @@ func verify(cmd *cobra.Command, args []string) error {
 		return errors.New("unsupported file extension for test policy file")
 	}
 
-	return policies.Verify(pd)
+	return policies.Verify(pd, fdir, adir)
 }

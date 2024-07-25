@@ -2,17 +2,18 @@ package policies
 
 import (
 	"errors"
+	"path/filepath"
 
 	"github.com/alanssitis/in-toto-policies/pkg/policies/models"
 	"github.com/secure-systems-lab/go-securesystemslib/dsse"
 	"github.com/secure-systems-lab/go-securesystemslib/signerverifier"
 )
 
-func parseFunctionaries(functionaries []*models.Functionary) (map[string]dsse.Verifier, error) {
+func parseFunctionaries(functionaries []*models.Functionary, dir string) (map[string]dsse.Verifier, error) {
 	sugar.Infof("parsing functionaries")
 	vs := make(map[string]dsse.Verifier, len(functionaries))
 	for _, f := range functionaries {
-		v, err := loadPublicKeyVerifier(f.PublicKeyPath, f.Scheme)
+		v, err := loadPublicKeyVerifier(filepath.Join(dir, f.PublicKeyPath), f.Scheme)
 		if err != nil {
 			return nil, err
 		}
