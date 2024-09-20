@@ -85,5 +85,5 @@ from the demo shown at Kubecon EU 2024 and [here](test/data/policy.yaml)
 is its "modern" look.
 
 > [!NOTE]
-> `inspect` is still a WIP. But its functionality can be partially implemented
+> `inspect` is still a WIP. But its functionality can be achieved
 > via a novel policy type.
