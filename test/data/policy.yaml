@@ -16,12 +16,12 @@ attestationRules:
         definition:
           field: this.subject
           rules:
-            - "CREATE main.c"
-            - "CREATE external.c"
-            - "CREATE external.h"
-            - "CREATE Makefile"
-            - "CREATE it.Makefile"
-            - "DISALLOW *"
+            - REQUIRE "main.c"
+            - REQUIRE "external.c"
+            - REQUIRE "external.h"
+            - REQUIRE "Makefile"
+            - REQUIRE "it.Makefile"
+            - DISALLOW "*"
     allowedFunctionaries:
       - alice
 
@@ -36,16 +36,16 @@ attestationRules:
         definition:
           field: this.predicate.materials
           rules:
-            - "MATCH external.c WITH untar.subject"
-            - "MATCH external.h WITH untar.subject"
-            - "ALLOW Makefile"
-            - "DISALLOW *"
+            - MATCH "external.c" WITH "untar.subject"
+            - MATCH "external.h" WITH "untar.subject"
+            - ALLOW "Makefile"
+            - DISALLOW "*"
       - type: https://in-toto.io/policy/artifact-rules/v0.1
         definition:
           field: this.subject
           rules:
-            - "CREATE external.o"
-            - "DISALLOW *"
+            - REQUIRE "external.o"
+            - DISALLOW "*"
     allowedFunctionaries:
       - alice
 
@@ -60,16 +60,16 @@ attestationRules:
         definition:
           field: this.predicate.materials
           rules:
-            - "MATCH main.c WITH untar.subject"
-            - "MATCH external.h WITH untar.subject"
-            - "ALLOW Makefile"
-            - "DISALLOW *"
+            - MATCH "main.c" WITH "untar.subject"
+            - MATCH "external.h" WITH "untar.subject"
+            - ALLOW "Makefile"
+            - DISALLOW "*"
       - type: https://in-toto.io/policy/artifact-rules/v0.1
         definition:
           field: this.subject
           rules:
-            - "CREATE main.o"
-            - "DISALLOW *"
+            - REQUIRE "main.o"
+            - DISALLOW "*"
     allowedFunctionaries:
       - alice
 
@@ -84,15 +84,15 @@ attestationRules:
         definition:
           field: this.predicate.materials
           rules:
-            - "MATCH main.o WITH build_main.subject"
-            - "MATCH external.o WITH build_external"
-            - "ALLOW Makefile"
-            - "DISALLOW *"
+            - MATCH "main.o" WITH "build_main.subject"
+            - MATCH "external.o" WITH "build_external"
+            - ALLOW "Makefile"
+            - DISALLOW "*"
       - type: https://in-toto.io/policy/artifact-rules/v0.1
         definition:
           field: this.subject
           rules:
-            - "CREATE testy"
-            - "DISALLOW *"
+            - REQUIRE "testy"
+            - DISALLOW "*"
     allowedFunctionaries:
       - alice

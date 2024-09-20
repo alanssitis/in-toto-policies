@@ -10,8 +10,10 @@ import (
 	ita "github.com/in-toto/attestation/go/v1"
 )
 
-var celEnv *cel.Env
-var statements map[string]any = make(map[string]any)
+var (
+	celEnv     *cel.Env
+	statements map[string]any = make(map[string]any)
+)
 
 func verifyPredicateAttribute(s *ita.Statement, pa *models.PredicateAttribute, rule_name string) (err error) {
 	if celEnv == nil {
