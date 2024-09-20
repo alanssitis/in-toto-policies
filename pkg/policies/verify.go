@@ -137,6 +137,7 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 
 func verifyPolicy(statement *ita.Statement, policy *models.Policy, rule_name string) error {
 	sugar.Infow("start verifying policy",
+		"ruleName", rule_name,
 		"policyType", policy.Type,
 	)
 	err := verifiers.VerifyPolicy(statement, policy, rule_name)

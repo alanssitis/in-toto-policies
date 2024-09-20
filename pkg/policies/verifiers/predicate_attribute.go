@@ -11,19 +11,12 @@ import (
 )
 
 var (
-	celEnv     *cel.Env
 	statements map[string]any = make(map[string]any)
 )
 
 func verifyPredicateAttribute(s *ita.Statement, pa *models.PredicateAttribute, rule_name string) (err error) {
-	if celEnv == nil {
-		celEnv, err = cel.NewEnv(
-			cel.Types(&ita.Statement{}),
-			cel.Variable("this", cel.ObjectType("in_toto_attestation.v1.Statement")),
-		)
-		if err != nil {
-			return
-		}
+	if err = initializeCelEnv(); err != nil {
+		return
 	}
 
 	for _, e := range pa.Expressions {
