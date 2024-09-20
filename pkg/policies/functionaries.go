@@ -51,6 +51,6 @@ func loadPublicKeyVerifier(public_key_path string, scheme string) (dsse.Verifier
 		}
 		return signerverifier.NewED25519SignerVerifierFromSSLibKey(ed25519)
 	default:
-		return nil, errors.New("Unrecognized scheme")
+		return nil, errors.New("unrecognized scheme")
 	}
 }

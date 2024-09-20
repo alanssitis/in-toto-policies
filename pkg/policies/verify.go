@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -37,6 +38,9 @@ func Verify(pd models.PolicyDocument, fdir string, adir string) error {
 
 	fdir, err = validateDir(fdir)
 	if err != nil {
+		sugar.Errorw("failed to get current directory",
+			"error", err,
+		)
 		return err
 	}
 	vm, err := parseFunctionaries(pd.Functionaries, fdir)
@@ -60,7 +64,13 @@ func Verify(pd models.PolicyDocument, fdir string, adir string) error {
 	}
 
 	attestations := mapAttestations(adir, dir_entries)
-	return verifyAttestationRules(pd.AttestationRules, attestations, vm)
+	err = verifyAttestationRules(pd.AttestationRules, attestations, vm)
+	if err != nil {
+		sugar.Errorw("failed to verify attestation rule",
+			"error", err,
+		)
+	}
+	return nil
 }
 
 func verifyAttestationRules(attestation_rules []*models.AttestationRule, attestations map[string]string, vm map[string]dsse.Verifier) error {
@@ -69,9 +79,6 @@ func verifyAttestationRules(attestation_rules []*models.AttestationRule, attesta
 	for _, a := range attestation_rules {
 		err := verifyAttestationRule(a, attestations, vm)
 		if err != nil {
-			sugar.Errorw("failed to verify attestation rule",
-				"error", err,
-			)
 			return err
 		}
 	}
@@ -86,34 +93,28 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 	file := attestations[ar.Name]
 	envelope, err := getEnvelope(file)
 	if err != nil {
-		sugar.Errorf("failed to get and parse envelope from attestation file")
-		return err
+		return fmt.Errorf("failed to get and parse envelope from attestation file: %w", err)
 	}
 	if envelope.PayloadType != "application/vnd.in-toto+json" {
-		sugar.Errorf("failed because file does not contain an in-toto typed envelope")
-		return errors.New("matched with an envelope that is not of type in-toto")
+		return fmt.Errorf("matched with an envelope that is not of type in-toto")
 	}
 
 	ev, err := buildEnvelopeVerifier(ar.AllowedFunctionaries, vm)
 	if err != nil {
-		sugar.Errorf("failed to build envelope verifier from functionaries")
-		return err
+		return fmt.Errorf("failed to build envelope verifier from functionaries: %w", err)
 	}
 
 	_, err = ev.Verify(context.TODO(), envelope)
 	if err != nil {
-		sugar.Errorf("failed to verify attestation from functionaries")
-		return err
+		return fmt.Errorf("failed to verify attestation from functionaries: %w", err)
 	}
 
 	statement, err := getStatement(envelope)
 	if err != nil {
-		sugar.Errorf("failed to get and parse statement from envelope")
-		return err
+		return fmt.Errorf("failed to get and parse statement from envelope: %w", err)
 	}
 	if ar.PredicateType != statement.PredicateType {
-		sugar.Errorf("failed because actual predicate type differs from expected predicate type")
-		return errors.New("predicate is not of the expected type")
+		return fmt.Errorf("predicate is not of the expected type")
 	}
 
 	sugar.Infow("start verifying attestation policies",
@@ -122,8 +123,7 @@ func verifyAttestationRule(ar *models.AttestationRule, attestations map[string]s
 	for _, p := range ar.Policies {
 		err = verifyPolicy(statement, p, ar.Name)
 		if err != nil {
-			sugar.Errorf("failed to verify attestation policies")
-			return err
+			return fmt.Errorf("policy verification failed: %w", err)
 		}
 	}
 
@@ -141,7 +141,6 @@ func verifyPolicy(statement *ita.Statement, policy *models.Policy, rule_name str
 	)
 	err := verifiers.VerifyPolicy(statement, policy, rule_name)
 	if err != nil {
-		sugar.Errorf("policy verification failed")
 		return err
 	}
 	sugar.Infow("successfully verified policy")
@@ -206,9 +205,6 @@ func validateDir(dir string) (string, error) {
 	}
 	dir, err := os.Getwd()
 	if err != nil {
-		sugar.Errorw("failed to get current directory",
-			"error", err,
-		)
 		return dir, err
 	}
 	return dir, nil

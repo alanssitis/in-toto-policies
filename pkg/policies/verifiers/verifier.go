@@ -9,13 +9,13 @@ import (
 )
 
 func VerifyPolicy(statement *ita.Statement, policy *models.Policy, rule_name string) error {
+	m, err := json.Marshal(policy.Definition)
+	if err != nil {
+		return err
+	}
 	switch policy.Type {
 	case "https://in-toto.io/policy/artifact-rules/v0.1":
 		var ar models.ArtifactRules
-		m, err := json.Marshal(policy.Definition)
-		if err != nil {
-			return err
-		}
 		err = json.Unmarshal(m, &ar)
 		if err != nil {
 			return err
@@ -23,10 +23,6 @@ func VerifyPolicy(statement *ita.Statement, policy *models.Policy, rule_name str
 		return verifyArtifactRules(statement, &ar, rule_name)
 	case "https://in-toto.io/policy/predicate-attribute/v0.1":
 		var pa models.PredicateAttribute
-		m, err := json.Marshal(policy.Definition)
-		if err != nil {
-			return err
-		}
 		err = json.Unmarshal(m, &pa)
 		if err != nil {
 			return err

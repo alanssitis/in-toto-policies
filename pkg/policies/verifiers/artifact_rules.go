@@ -6,5 +6,6 @@ import (
 )
 
 func verifyArtifactRules(statement *ita.Statement, ar *models.ArtifactRules, rule_name string) error {
+	// TODO: implmeent artifact rules
 	return nil
 }
