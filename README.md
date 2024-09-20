@@ -69,6 +69,11 @@ hopefully inspire further development in this area. The ideal outcome is to use
 this project as reference and a conversation starter that would lead to an ITE
 that introduces something that is to layouts as what attestatoins was to links.
 
+Anything related to embedding trust or distribution of the policy is deemed out
+of scope as it heavily depends on the existing infrastructure of the consumer.
+Although a proper successor should consider an ITE outlining integration with
+TUF to offer an example on how this can be done.
+
 > [!IMPORTANT]
 > One additional point that should be touched upon on a proper successor is the
 > scalability of these policies for larger organizations. This would require
@@ -87,3 +92,22 @@ is its "modern" look.
 > [!NOTE]
 > `inspect` is still a WIP. But its functionality can be achieved
 > via a novel policy type.
+
+The goal of this was to dramatically improve the expressability of the policy
+when trying to apply it to attestations rather than links, which lead to a lot
+more control over artifact rules and attribute rules at the cost of increased
+verbosity and a slight increase in complexity. Nevertheless, this should be a
+net win as this improves the consistency of the policy and would allow any user
+to clearly understand their policy.
+
+The predicate attribute grammar was also simplified and changed as a lot of the
+older grammar assumed a strict `MATERIALS` & `PRODUCTS` system that does not
+particularly work well with attestations that are not links.
+
+It should be straightforward to add more functionary capabilities as this is
+using the Secure System Lib's `Verifier` interface.
+
+## Contributing
+
+Feel free to open issues or PRs for any discussion or changes that could be
+made to improve and refine this prototype.
