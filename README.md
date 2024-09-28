@@ -87,11 +87,11 @@ TUF to offer an example on how this can be done.
 This repository contains all code used to implement the experiment. Here is the
 [layout](https://github.com/alanssitis/new-attestation-policy-demo/blob/main/layout.yaml)
 from the demo shown at Kubecon EU 2024 and [here](test/data/policy.yaml)
-is its "modern" look.
+is its new look.
 
 > [!NOTE]
 > `inspect` is still a WIP. But its functionality can be achieved
-> via a novel policy type.
+> via another policy type.
 
 The goal of this was to dramatically improve the expressability of the policy
 when trying to apply it to attestations rather than links, which lead to a lot
@@ -106,6 +106,17 @@ particularly work well with attestations that are not links.
 
 It should be straightforward to add more functionary capabilities as this is
 using the Secure System Lib's `Verifier` interface.
+
+There are two new features that I would like to highlight:
+
+- Having different types of policies defined by a URI (similar to how there
+  are different types of attestations)
+- Applying artifact rules on different fields rather than predetermined
+  `materials` and `products`.
+
+There are example attestations generated from the aforementioned demo with the
+associated policy in `test/data`. The test can be exectued by running
+`make run-test`.
 
 ## Contributing
 
